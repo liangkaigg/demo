@@ -1,0 +1,6 @@
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://code.newcli.com/claude/droid",
+    "ANTHROPIC_AUTH_TOKEN": "sk-ant-oat01-pR7Ox-fmAHuPK-PkFBXQk5OlaTDhjYbwcY9VbJ7p-KuroiSUdqag9x3zxBTLe9TKTc_wrjwIGg_esqr3K4f3P7vXXCLE9AA"
+  }
+}
