@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据管理平台</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <!-- Background decorative orbs -->
+  <div class="bg-orb bg-orb--1"></div>
+  <div class="bg-orb bg-orb--2"></div>
+  <div class="bg-orb bg-orb--3"></div>
+
+  <!-- Navigation -->
+  <nav class="nav-glass">
+    <div class="nav-inner">
+      <div class="nav-brand">
+        <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 3L3 9l11 6 11-6-11-6z"/>
+          <path d="M3 15l11 6 11-6"/>
+          <path d="M3 21l11 6 11-6"/>
+        </svg>
+        <span>数据管理平台</span>
+      </div>
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="data">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          <span>数据管理</span>
+        </button>
+        <button class="nav-tab" data-tab="import">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span>生产导入</span>
+        </button>
+        <button class="nav-tab" data-tab="generate">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          <span>发票生成</span>
+        </button>
+        <button class="nav-tab" data-tab="json">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"/>
+            <polyline points="8 6 2 12 8 18"/>
+          </svg>
+          <span>JSON工具</span>
+        </button>
+        <button class="nav-tab" data-tab="report">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <span>报表查询</span>
+        </button>
+      </div>
+      <div class="nav-status">
+        <span class="status-dot"></span>
+        <span style="margin-right:12px;">系统运行中</span>
+        <span style="color:rgba(255,255,255,0.6);font-size:13px;display:flex;align-items:center;gap:6px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          {{ username }}
+        </span>
+        <a href="{{ url_for('logout') }}" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;margin-left:8px;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;vertical-align:middle;">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          退出
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- ====== Tab: 数据管理 ====== -->
+    <section id="panel-data" class="tab-panel active">
+
+      <!-- Data Type Selection -->
+      <div class="glass-card">
+        <div class="glass-card-header">
+          <div class="card-icon card-icon--blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+          </div>
+          <h3>选择数据类型</h3>
+          <span class="badge">多选</span>
+        </div>
+        <div class="checkbox-group" id="dataTypeGroup">
+          <div class="checkbox-chip">
+            <input type="checkbox" id="type_invoice" checked>
+            <label for="type_invoice"><span class="chip-dot"></span>发票</label>
+          </div>
+          <div class="checkbox-chip">
+            <input type="checkbox" id="type_vat">
+            <label for="type_vat"><span class="chip-dot"></span>增值税</label>
+          </div>
+          <div class="checkbox-chip">
+            <input type="checkbox" id="type_export">
+            <label for="type_export"><span class="chip-dot"></span>出口退税</label>
+          </div>
+          <div class="checkbox-chip">
+            <input type="checkbox" id="type_income">
+            <label for="type_income"><span class="chip-dot"></span>所得税</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Single Data Import -->
+      <div class="glass-card">
+        <div class="glass-card-header">
+          <div class="card-icon card-icon--amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"/>
+              <polyline points="8 6 2 12 8 18"/>
+            </svg>
+          </div>
+          <h3>单条数据导入</h3>
+        </div>
+        <form id="dataSingleForm">
+          <div class="form-grid">
+            <div class="form-field full-width">
+              <label>纳税人识别号</label>
+              <input type="text" id="data_nsrsbh" placeholder="请输入纳税人识别号" required>
+            </div>
+            <div class="form-field full-width">
+              <label>企业名称</label>
+              <input type="text" id="data_company" placeholder="请输入企业名称" required>
+            </div>
+            <div id="vat_extra_fields" style="display:none;">
+              <div class="form-grid">
+                <div class="form-field">
+                  <label>联系人姓名</label>
+                  <input type="text" id="data_name" placeholder="可选">
+                </div>
+                <div class="form-field">
+                  <label>证件号码</label>
+                  <input type="text" id="data_zjhm" placeholder="可选">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="buttons-row">
+            <button type="submit" class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6"/>
+                <polyline points="8 6 2 12 8 18"/>
+              </svg>
+              提交处理
+            </button>
+          </div>
+        </form>
+        <div id="dataResult" class="result-card"></div>
+      </div>
+    </section>
+
+    <!-- ====== Tab: 生产数据导入 ====== -->
+    <section id="panel-import" class="tab-panel">
+
+      <!-- ZIP Import -->
+      <div class="glass-card">
+        <div class="glass-card-header">
+          <div class="card-icon card-icon--green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+          <h3>ZIP 包导入</h3>
+          <span class="badge">推荐</span>
+        </div>
+        <form id="zipImportForm">
+          <div class="file-drop" id="fileDrop">
+            <svg class="file-drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <div class="file-drop-text">点击选择 ZIP 文件</div>
+            <div class="file-drop-hint">选择包含 SQL 文件的 ZIP 压缩包，系统将自动识别发票/税务数据</div>
+            <div id="zipFileName" class="file-name"></div>
+            <input type="file" id="zip_file" accept=".zip">
+          </div>
+          <div class="buttons-row">
+            <button type="submit" class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              导入 ZIP
+            </button>
+          </div>
+        </form>
+        <div id="importResult" class="result-card"></div>
+      </div>
+
+      <!-- Delete Data -->
+      <div class="glass-card danger-zone">
+        <div class="glass-card-header">
+          <div class="card-icon card-icon--red">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </div>
+          <h3>删除发票数据</h3>
+        </div>
+        <div class="danger-notice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span>危险操作：此操作将永久删除数据，请谨慎使用</span>
+        </div>
+        <form id="deleteDataForm">
+          <div class="form-field">
+            <label>纳税人识别号</label>
+            <textarea id="delete_nsrsbh" placeholder="请输入纳税人识别号，多个税号用逗号或换行分隔&#10;例如：91330100MA27W1234X, 91330200MA27W5678Y" style="height:100px;"></textarea>
+          </div>
+          <div class="buttons-row">
+            <button type="submit" class="btn btn-danger">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+              删除数据
+            </button>
+          </div>
+        </form>
+        <div id="deleteResult" class="result-card"></div>
+      </div>
+    </section>
+
+    <!-- ====== Tab: 发票生成 ====== -->
+    <section id="panel-generate" class="tab-panel">
+
+      <div class="glass-card">
+        <div class="glass-card-header">
+          <div class="card-icon card-icon--green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
+          <h3>发票数据生成与入库</h3>
+          <span class="badge">自动导入</span>
+        </div>
+        <form id="invoiceGenForm">
+          <div class="form-grid">
+            <div class="form-field">
+              <label>纳税人识别号</label>
+              <input type="text" id="gen_tax_no" placeholder="请输入纳税人识别号" required>
+            </div>
+            <div class="form-field">
+              <label>企业名称</label>
+              <input type="text" id="gen_company" placeholder="请输入购买方企业名称" required>
+            </div>
+            <div class="form-field">
+              <label>目标数据量 (MB)</label>
+              <input type="number" id="gen_size_mb" value="10" min="1" max="1024" step="1" required>
+            </div>
+          </div>
+          <div class="buttons-row">
+            <button type="submit" class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+              生成并入库
+            </button>
+          </div>
+        </form>
+        <div id="invoiceGenResult" class="result-card"></div>
+      </div>
+    </section>
+
+    <!-- ====== Tab: JSON工具 ====== -->
+    <section id="panel-json" class="tab-panel">
+      <div class="json-tool-container">
+
+        <!-- JSON Input -->
+        <div class="glass-card">
+          <div class="glass-card-header">
+            <div class="card-icon card-icon--blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6"/>
+                <polyline points="8 6 2 12 8 18"/>
+              </svg>
+            </div>
+            <h3>JSON 数据输入</h3>
+          </div>
+          <div class="json-input-section">
+            <div class="json-input-row">
+              <input type="file" id="jsonFile" accept=".json" style="display:none;">
+              <button class="btn btn-ghost btn-sm" id="uploadJsonBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                上传JSON文件
+              </button>
+              <span id="jsonFileName" class="text-sm text-muted">未选择文件</span>
+              <button class="btn btn-ghost btn-sm" id="clearJsonBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="1 4 1 10 7 10"/>
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                </svg>
+                清除
+              </button>
+            </div>
+            <textarea id="jsonInput" placeholder='请粘贴JSON数据，例如：&#10;&#10;[{"FPXX": {"INVOICE_NUMBER": "123", "BILLING_DATE": "2025-01-03", "FPSPMX": [{"COMMODITY_NAME": "商品", "AMOUNT": "100"}]}}]'></textarea>
+            <div class="json-button-group">
+              <button class="btn btn-primary" id="processJsonBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+                处理数据
+              </button>
+              <button class="btn btn-accent" id="downloadJsonBtn" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                下载Excel
+              </button>
+              <button class="btn btn-ghost" id="resetJsonBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="1 4 1 10 7 10"/>
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                </svg>
+                重置
+              </button>
+            </div>
+            <div id="jsonErrorMsg" class="message error"></div>
+            <div id="jsonSuccessMsg" class="message success"></div>
+            <div id="jsonInfoMsg" class="message info"></div>
+          </div>
+        </div>
+
+        <!-- ====== 字段映射模版 (JSON工具) ====== -->
+        <div class="glass-card" id="jsonMappingCard">
+          <div class="glass-card-header">
+            <div class="card-icon card-icon--purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </div>
+            <h3>字段映射模版 (可选)</h3>
+            <span class="badge">自动翻译</span>
+          </div>
+          <p class="text-sm text-muted" style="margin-bottom:12px;">上传Excel模版，自动提取第1行英文→第2行中文的字段映射，生成Excel时自动翻译表头</p>
+          <div class="json-input-row">
+            <input type="file" id="templateFile" accept=".xlsx,.xls" style="display:none;">
+            <button class="btn btn-purple btn-sm" id="uploadTemplateBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              上传映射模版
+            </button>
+            <span id="templateFileName" class="text-sm text-muted">未选择模版</span>
+            <button class="btn btn-ghost btn-sm" id="clearTemplateBtn" style="display:none;">清除模版</button>
+          </div>
+          <div id="mappingInfo" class="mapping-summary" style="margin-top:10px;">
+            <span class="mapping-badge empty">未加载映射 — 将使用原始JSON字段名</span>
+          </div>
+        </div>
+
+        <!-- Result Sheets -->
+        <div class="glass-card">
+          <div class="glass-card-header">
+            <div class="card-icon card-icon--green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="3" y1="9" x2="21" y2="9"/>
+                <line x1="9" y1="21" x2="9" y2="9"/>
+              </svg>
+            </div>
+            <h3>处理结果</h3>
+          </div>
+          <div id="jsonSheetList" class="sheet-list">
+            <div class="sheet-item">
+              <span class="sheet-name">暂无数据</span>
+              <span class="sheet-rows">请先处理JSON数据</span>
+            </div>
+          </div>
+        </div>
+
+
+      </div>
+    </section>
+
+    <!-- ====== Tab: 报表查询 ====== -->
+    <section id="panel-report" class="tab-panel">
+
+      <div class="glass-card">
+        <div class="glass-card-header">
+          <div class="card-icon card-icon--blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </div>
+          <h3>报表模型查询</h3>
+          <span class="badge">SYT</span>
+        </div>
+        <form id="reportSearchForm">
+          <div class="form-field" style="margin-bottom:14px;">
+            <label>报表名称关键词</label>
+            <input type="text" id="report_keyword" placeholder="请输入报表名称关键词，如：水费、电费、增值税..." required>
+          </div>
+          <div class="buttons-row">
+            <button type="submit" class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              搜索
+            </button>
+          </div>
+        </form>
+        <div id="reportResult" class="result-card"></div>
+      </div>
+
+      <div class="glass-card" id="reportTableCard" style="display:none;">
+        <div class="glass-card-header">
+          <div class="card-icon card-icon--green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <line x1="3" y1="9" x2="21" y2="9"/>
+              <line x1="9" y1="21" x2="9" y2="9"/>
+            </svg>
+          </div>
+          <h3>查询结果</h3>
+          <span id="reportCount" class="badge">0 条</span>
+        </div>
+        <div class="preview-container" style="max-height:600px;">
+          <div id="reportTableWrapper" style="overflow-x:auto;">
+            <p style="padding:20px;color:var(--text-muted);text-align:center;">暂无数据</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay" style="display:none;">
+    <div class="loading-dialog">
+      <div class="loading-spinner-ring"></div>
+      <div class="loading-title">数据导入中</div>
+      <div class="loading-desc">正在处理和导入 SQL 文件，请耐心等待...</div>
+      <div class="loading-bar-track">
+        <div class="loading-bar-fill"></div>
+      </div>
+      <div class="loading-progress" id="loadingProgress">0 / 0</div>
+    </div>
+  </div>
+
+  <script>var APP_ROOT = '{{ url_for("index") }}'.replace(/\/$/, '');</script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

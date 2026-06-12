@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON转Excel工具 - 通用数据转换</title>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #3498db;
+            --primary-hover: #2980b9;
+            --success: #27ae60;
+            --success-hover: #219653;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --light: #f8f9fa;
+            --dark: #2c3e50;
+            --gray: #95a5a6;
+            --border: #ddd;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: var(--dark);
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+        
+        .subtitle {
+            color: var(--gray);
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-title {
+            font-size: 1.3rem;
+            color: var(--dark);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light);
+        }
+        
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .input-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-family: monospace;
+            resize: vertical;
+            transition: border-color 0.3s;
+            font-size: 14px;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .file-upload {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:disabled {
+            background-color: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+        }
+        
+        .btn-success:hover {
+            background-color: var(--success-hover);
+        }
+        
+        .btn-warning {
+            background-color: var(--warning);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .error {
+            background-color: #fadbd8;
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+        
+        .success {
+            background-color: #d5f5e3;
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+        
+        .info {
+            background-color: #d6eaf8;
+            color: var(--primary);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .sheet-list {
+            margin-top: 15px;
+            padding: 20px;
+            background-color: var(--light);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        
+        .sheet-item {
+            padding: 12px 15px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .sheet-name {
+            font-weight: bold;
+            color: var(--dark);
+        }
+        
+        .sheet-rows {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .example {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .mapping-summary {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .mapping-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .mapping-badge.empty {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .mapping-detail {
+            margin-top: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 0.8rem;
+            font-family: monospace;
+            display: none;
+        }
+
+        .mapping-detail.show {
+            display: block;
+        }
+
+        .mapping-detail table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .mapping-detail td {
+            padding: 3px 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .mapping-detail td:first-child {
+            color: #666;
+        }
+
+        .mapping-detail td:last-child {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .mapping-empty-hint {
+            color: #999;
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .icon {
+            width: 18px;
+            height: 18px;
+        }
+        @media (max-width: 768px) {
+            .input-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                justify-content: center;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>JSON转Excel工具</h1>
+            <p class="subtitle">通用JSON数据转换器 | 智能识别数据结构</p>
+            <p>上传JSON文件或粘贴JSON内容，工具将自动解析任意JSON结构并生成对应的工作表</p>
+        </header>
+        
+        <div class="card">
+            <h2 class="card-title">输入JSON数据</h2>
+            <div class="input-section">
+                <div class="input-row">
+                    <div class="file-upload">
+                        <input type="file" id="jsonFile" accept=".json" style="display: none;">
+                        <button class="btn" id="uploadBtn">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            上传JSON文件
+                        </button>
+                        <span id="fileName">未选择文件</span>
+                    </div>
+                    
+                    <button class="btn btn-warning" id="clearBtn">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"></polyline>
+                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                        </svg>
+                        清除数据
+                    </button>
+                </div>
+                
+                <textarea id="jsonInput" placeholder='请粘贴JSON数据，例如：&#10;&#10;数组格式（推荐）：&#10;[{&#10;  "name": "张三",&#10;  "age": 30,&#10;  "city": "北京",&#10;  "orders": [{&#10;    "id": "ORD001",&#10;    "amount": 100&#10;  }]&#10;}]&#10;&#10;对象格式：&#10;{&#10;  "company": "ACME",&#10;  "employees": [{&#10;    "name": "李四",&#10;    "dept": "技术部"&#10;  }]&#10;}'></textarea>
+                
+                <div class="button-group">
+                    <button class="btn" id="processBtn">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                        处理数据
+                    </button>
+                    <button class="btn btn-success" id="downloadBtn" disabled>
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        下载Excel文件
+                    </button>
+                    <button class="btn btn-danger" id="resetBtn">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"></polyline>
+                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                        </svg>
+                        重置工具
+                    </button>
+                </div>
+                
+                <div id="errorMsg" class="message error"></div>
+                <div id="successMsg" class="message success"></div>
+                <div id="infoMsg" class="message info"></div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">字段映射模版（可选）</h2>
+            <p style="color:#666;font-size:0.9rem;margin-bottom:12px;">上传Excel模版文件，自动提取第1行英文→第2行中文的字段映射关系，生成Excel时自动翻译表头</p>
+            <div class="input-row">
+                <div class="file-upload">
+                    <input type="file" id="templateFile" accept=".xlsx,.xls" style="display: none;">
+                    <button class="btn" id="uploadTemplateBtn" style="background:#8e44ad;">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                        上传映射模版
+                    </button>
+                    <span id="templateFileName">未选择模版</span>
+                </div>
+                <button class="btn btn-danger" id="clearTemplateBtn" style="display:none;">
+                    清除模版
+                </button>
+            </div>
+            <div id="mappingInfo" style="margin-top:10px;">
+                <span class="mapping-badge empty">未加载映射模版 — 将使用原始JSON字段名</span>
+            </div>
+            <div id="mappingDetail" class="mapping-detail"></div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">处理结果</h2>
+            <div id="sheetInfo">
+                <p>检测到的工作表列表：</p>
+                <div id="sheetList" class="sheet-list">
+                    <div class="sheet-item">
+                        <span class="sheet-name">暂无数据</span>
+                        <span class="sheet-rows">请先处理JSON数据</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const jsonInput = document.getElementById('jsonInput');
+            const jsonFile = document.getElementById('jsonFile');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const fileName = document.getElementById('fileName');
+            const clearBtn = document.getElementById('clearBtn');
+            const processBtn = document.getElementById('processBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const errorMsg = document.getElementById('errorMsg');
+            const successMsg = document.getElementById('successMsg');
+            const infoMsg = document.getElementById('infoMsg');
+            const sheetList = document.getElementById('sheetList');
+            
+            let workbook = null;
+            let jsonData = null;
+            let sheetDataMap = new Map();
+            let uploadedFileName = '';
+            let fieldMapping = null;
+            let mappingStats = null;
+            let templateFileName = '';
+
+            // 税务数据元信息：sheet中文名 + 中英文表头映射
+            const TAX_SHEET_META = {
+                NSRJCXX: {
+                    name: '1.企业基本信息(NSRJCXX)',
+                    en: ['DJZCLXDM','SYKJZDMC','JYFW','ZCD_DHHM','SYKJZD','NSRZTDM','ZCZBBZ','NSRZTMC','YB','ZGY','KYRQ','SSHYMC','DJZCLXMC','NSLXDM','ZCDZ','GSZCH','DS_DM','NSRSBH','HYMLDM','YYDZ','HYMLMC','LSGXDM','DS_MC','HZDJRQ','DBR_DHHM','NSLXMC','SWJG_DM','DHHM','ZYRS','DBR_YDDHHM','LSGXMC','ZZJGDM','SS_MC','XYDJ','SSHYDM','QYHGDM','SS_DM','NSRMC','XYPFFS','ZCZB_BZMC','SCJYQX_Z','DBRMC','DBR_ZJLX_MC','ZCZB','XYPFSJ','DBR_ZJLX_DM','SWJG_MC','DBR_ZJHM'],
+                    cn: ['登记注册类型代码','适用会计制度名称','经营范围','注册地电话号码','适用会计制度代码','纳税人状态代码','注册资本币种','纳税人状态名称','邮编','主管员','开业日期','所属行业名称','登记注册类型名称','纳税类型代码','注册地址','工商注册号','地市代码','纳税人识别号','行业门类代码','营业地址','行业门类名称','隶属关系代码','地市','核准登记日期','法定代表人电话号码','纳税类型名称','税务机构代码','电话号码','从业人数','法定代表人移动电话号码','隶属关系名称','组织机构代码','省市','信用等级','所属行业代码','企业海关代码','省份代码','纳税人名称','信用评分分数','注册资本币种名称','生产经营期止','法定代表人名称','法定代表人证件类型名称','注册资本','信用评分时间','法定代表证件类型代码','税务机构名称','法定代表人证件号码']
+                },
+                LXRXX_LIST: {
+                    name: '2.企业联系人信息(LXRXX_LIST)',
+                    en: ['DBR_DYDZ','DBRMC','DBR_DHHM','DBR_ZJLX_MC','DBR_ZJLX_DM','DBR_YDDHHM','BSSF','DBR_ZJHM','NSRSBH'],
+                    cn: ['代办人电子邮件','代办人名称','代办人电话号码','代办人证件类型名称','代办人证件类型代码','代办人移动电话号码','办税身份','代办人证件号码','纳税人识别号']
+                },
+                TZFXX_LIST: {
+                    name: '3.企业投资方信息(TZFXX_LIST)',
+                    en: ['TZJE','TZBL','GJDZ','ZJZLMC','ZJZLDM','TZFJJXZMC','NSRSBH','TZFJJXZDM','TZFMC','ZJHM'],
+                    cn: ['投资金额','投资比例','国际地址','证件种类名称','证件种类代码','投资方经济性质名称','纳税人识别号','投资方经济性质代码','投资方名称','证件号码']
+                },
+                SBXX_LIST: {
+                    name: '4.纳税申报数据(SBXX_LIST)',
+                    en: ['SSSQZ','SBRQ','ZSXMMC','YJSE','SSSQQ','QBXSE','YSXSSR','YNSE','SBQX','JMSE','YBTSE','ZSXMDM','NSRSBH'],
+                    cn: ['所属时间止','申报日期','征收项目名称','预缴税额','所属时间起','全部销售额','应税销售收入','应纳税额','申报期限','减免税额','应补退税额','征收项目代码','纳税人识别号']
+                },
+                ZSXX_LIST: {
+                    name: '5.税款征收信息(ZSXX_LIST)',
+                    en: ['SSSQ_Z','JKFSRQ','SKZL_DM','ZSXM_MC','SSSQ_Q','JKQX','SKZT_DM','ZXPM_DM','NSRMC','SE','SKZL_MC','XSSR','ZSXM_DM','SL','NSRSBH','SKZT_MC'],
+                    cn: ['所属时间止','缴款发生日期','税款种类代码','征收项目名称','所属时间起','缴款期限','税款状态代码','征收品目代码','纳税人名称','税额','税款种类名称','销售收入','征收项目代码','税率','纳税人识别号','税款状态名称']
+                },
+                ZCFZBXX_LIST: {
+                    name: '6.企业资产负债表(ZCFZBXX_LIST)',
+                    en: ['SKSSQQ','BBLX','XM','NCYE','MC','SKSSQZ','QMYE','NSRSBH','BSRQ'],
+                    cn: ['税款所属期起','报表类型','项目','年初余额','行次','税款所属期止','期末余额','纳税人识别号','报送日期']
+                },
+                LRBXX_LIST: {
+                    name: '7.企业利润表(LRBXX_LIST)',
+                    en: ['SKSSQQ','BBLX','XM','BQJE','MC','SKSSQZ','BYS','NSRSBH','BSRQ','SQJE'],
+                    cn: ['税款所属期起','报表类型','项目','本期金额','行次','税款所属期止','本月数','纳税识别号','报送日期','上期金额']
+                },
+                QYWFWZXX_LIST: {
+                    name: '8.企业涉税违法违规信息(QYWFWZXX_LIST)',
+                    en: ['NSRSBH','DJRQ','ZYWFWZSS','ZYWFWZSDDM','ZYWFWZSDMC','WFWZLXDM','WFWZLXMC','WFWZZTDM','WFWZZTMC','CLCFJDRQ','LARQ','XGZT','SSSQQ','SSSQZ'],
+                    cn: ['纳税人识别号','登记日期','主要违法违规事实','主要违法违规手段代码','主要违法违规手段名称','违法违规类型代码','违法违规类型名称','违法违规状态代码','违法违规状态名称','处理处罚决定日期','立案日期','修改状态','所属时期起','所属时期止']
+                },
+                SWJCXX_LIST: {
+                    name: '9.企业稽查信息(SWJCXX_LIST)',
+                    en: ['NSRSBH','AYDJRQ','AJLYDM','AJLYMC','WFWZLXDM','WFWZLXMC','JCLXDM','JCLXMC','JCZTDM','JCZTMC','AJCLYJDM','AJCLYJMC','AJMC','SSSQQ','SSSQZ'],
+                    cn: ['纳税人识别号','案源登记日期','案件来源代码','案件来源名称','违法违规类型代码','违法违规类型名称','稽查类型代码','稽查类型名称','稽查状态代码','稽查状态名称','案件处理意见代码','案件处理意见名称','案件名称','所属时期起','所属时期止']
+                },
+                QYBGDJXX_LIST: {
+                    name: '10.企业变更登记(QYBGDJXX_LIST)',
+                    en: ['NSRSBH','BGXMMC','BGXMDM','BGQNR','BGHNR','BGRQ'],
+                    cn: ['纳税人识别号','变更项目名称','变更项目代码','变更前内容','变更后内容','变更日期']
+                }
+            };
+
+            // 将数据追加为工作表 — 对已知税务sheet使用双行表头（第1行英文 + 第2行中文）
+            function appendSheetWithHeaders(wb, data, sheetKey, usedNames) {
+                const meta = TAX_SHEET_META[sheetKey];
+                const sheetName = (meta && meta.name) ? meta.name : sheetKey;
+                const safeName = uniqueSheetName(sheetName, usedNames);
+
+                if (meta && meta.en && meta.cn && data.length > 0) {
+                    // 双行表头：第1行英文 + 第2行中文 + 数据行
+                    const aoa = [meta.en, meta.cn];
+                    for (const row of data) {
+                        const rowArr = meta.en.map(function(k) {
+                            const v = row[k];
+                            return v !== undefined && v !== null ? v : '';
+                        });
+                        aoa.push(rowArr);
+                    }
+                    const ws = XLSX.utils.aoa_to_sheet(aoa);
+                    XLSX.utils.book_append_sheet(wb, ws, safeName);
+                    sheetDataMap.set(safeName, data);
+                } else if (fieldMapping && data.length > 0) {
+                    // 自定义模版映射：尝试构建双行表头
+                    const enHeaders = Object.keys(data[0]);
+                    const cnHeaders = enHeaders.map(function(k) { return fieldMapping[k] || k; });
+                    const hasTranslation = cnHeaders.some(function(h, i) { return h !== enHeaders[i]; });
+                    if (hasTranslation) {
+                        const aoa = [enHeaders, cnHeaders];
+                        for (const row of data) {
+                            const rowArr = enHeaders.map(function(k) {
+                                const v = row[k];
+                                return v !== undefined && v !== null ? v : '';
+                            });
+                            aoa.push(rowArr);
+                        }
+                        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), safeName);
+                        sheetDataMap.set(safeName, data);
+                    } else {
+                        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), safeName);
+                        sheetDataMap.set(safeName, data);
+                    }
+                } else {
+                    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), safeName);
+                    sheetDataMap.set(safeName, data);
+                }
+            }
+
+            // ========== 模版映射上传 ==========
+            const templateFile = document.getElementById('templateFile');
+            const uploadTemplateBtn = document.getElementById('uploadTemplateBtn');
+            const templateFileNameEl = document.getElementById('templateFileName');
+            const clearTemplateBtn = document.getElementById('clearTemplateBtn');
+            const mappingInfo = document.getElementById('mappingInfo');
+            const mappingDetail = document.getElementById('mappingDetail');
+
+            uploadTemplateBtn.addEventListener('click', function() {
+                templateFile.click();
+            });
+
+            templateFile.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                templateFileName = file.name;
+                templateFileNameEl.textContent = file.name;
+                clearTemplateBtn.style.display = 'inline-flex';
+                showInfo('正在解析模版映射关系...');
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const wb = XLSX.read(data, { type: 'array' });
+                        parseTemplateMapping(wb);
+                        showInfo('模版映射加载成功！');
+                    } catch (err) {
+                        showError('解析模版文件失败: ' + err.message);
+                    }
+                };
+                reader.onerror = function() {
+                    showError('读取模版文件时发生错误');
+                };
+                reader.readAsArrayBuffer(file);
+            });
+
+            clearTemplateBtn.addEventListener('click', function() {
+                fieldMapping = null;
+                mappingStats = null;
+                templateFileName = '';
+                templateFile.value = '';
+                templateFileNameEl.textContent = '未选择模版';
+                clearTemplateBtn.style.display = 'none';
+                mappingInfo.innerHTML = '<span class="mapping-badge empty">未加载映射模版 — 将使用原始JSON字段名</span>';
+                mappingDetail.innerHTML = '';
+                mappingDetail.classList.remove('show');
+            });
+
+            function parseTemplateMapping(wb) {
+                fieldMapping = {};
+                let totalMappings = 0;
+
+                for (const sheetName of wb.SheetNames) {
+                    const ws = wb.Sheets[sheetName];
+                    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+                    if (range.e.r < 1) continue;
+
+                    for (let c = range.s.c; c <= range.e.c; c++) {
+                        const keyAddr = XLSX.utils.encode_cell({ r: 0, c: c });
+                        const labelAddr = XLSX.utils.encode_cell({ r: 1, c: c });
+                        const keyCell = ws[keyAddr];
+                        const labelCell = ws[labelAddr];
+
+                        if (keyCell && labelCell) {
+                            const key = String(keyCell.v || '').trim();
+                            const label = String(labelCell.v || '').trim();
+                            if (key && label && key !== label) {
+                                fieldMapping[key] = label;
+                                totalMappings++;
+                            }
+                        }
+                    }
+                }
+
+                mappingStats = {
+                    sheetCount: wb.SheetNames.length,
+                    mappingCount: totalMappings
+                };
+
+                updateMappingDisplay();
+            }
+
+            function updateMappingDisplay() {
+                if (!mappingStats || mappingStats.mappingCount === 0) {
+                    mappingInfo.innerHTML = '<span class="mapping-badge empty">模版中未找到有效映射</span>';
+                    mappingDetail.innerHTML = '';
+                    return;
+                }
+
+                mappingInfo.innerHTML = `
+                    <span class="mapping-badge">已加载映射：${mappingStats.mappingCount} 个字段</span>
+                    <span style="color:#888;font-size:0.85rem;">覆盖 ${mappingStats.sheetCount} 个工作表</span>
+                    <a href="#" id="toggleMappingDetail" style="font-size:0.85rem;color:#3498db;margin-left:8px;">查看映射详情</a>
+                `;
+
+                let detailHtml = '<table>';
+                const entries = Object.entries(fieldMapping).slice(0, 200);
+                for (const [key, label] of entries) {
+                    detailHtml += '<tr><td>' + escHtml(key) + '</td><td>' + escHtml(label) + '</td></tr>';
+                }
+                if (Object.keys(fieldMapping).length > 200) {
+                    detailHtml += '<tr><td colspan="2" style="color:#999;">... 还有 ' + (Object.keys(fieldMapping).length - 200) + ' 条映射未显示</td></tr>';
+                }
+                detailHtml += '</table>';
+                mappingDetail.innerHTML = detailHtml;
+
+                document.getElementById('toggleMappingDetail').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    mappingDetail.classList.toggle('show');
+                    this.textContent = mappingDetail.classList.contains('show') ? '收起映射详情' : '查看映射详情';
+                });
+            }
+
+            function escHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            function translateFieldName(engName) {
+                if (!fieldMapping) return engName;
+                if (fieldMapping[engName]) return fieldMapping[engName];
+                const parts = engName.split('.');
+                const lastPart = parts[parts.length - 1];
+                if (fieldMapping[lastPart]) {
+                    const prefixParts = parts.slice(0, -1);
+                    const translatedLast = fieldMapping[lastPart];
+                    return prefixParts.length > 0 ? prefixParts.join('.') + '.' + translatedLast : translatedLast;
+                }
+                return engName;
+            }
+
+            function translateObjectKeys(obj) {
+                if (!fieldMapping) return obj;
+                const result = {};
+                for (const [key, value] of Object.entries(obj)) {
+                    const newKey = translateFieldName(key);
+                    result[newKey] = value;
+                }
+                return result;
+            }
+
+            function translateArrayItems(arr) {
+                if (!fieldMapping) return arr;
+                return arr.map(function(item) {
+                    if (isObject(item)) return translateObjectKeys(item);
+                    return item;
+                });
+            }
+            
+            // 上传JSON文件
+            uploadBtn.addEventListener('click', function() {
+                jsonFile.click();
+            });
+            
+            jsonFile.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                uploadedFileName = file.name;
+                fileName.textContent = file.name;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        jsonInput.value = e.target.result;
+                        hideMessage(errorMsg);
+                        showInfo('文件加载成功，请点击"处理数据"按钮');
+                    } catch (err) {
+                        showError('读取文件失败: ' + err.message);
+                    }
+                };
+                reader.onerror = function() {
+                    showError('读取文件时发生错误');
+                };
+                reader.readAsText(file);
+            });
+            
+            // 清除输入
+            clearBtn.addEventListener('click', function() {
+                jsonInput.value = '';
+                jsonFile.value = '';
+                fileName.textContent = '未选择文件';
+                uploadedFileName = '';
+                hideMessage(errorMsg);
+                hideMessage(successMsg);
+            });
+            
+            // 重置工具
+            resetBtn.addEventListener('click', function() {
+                jsonInput.value = '';
+                jsonFile.value = '';
+                fileName.textContent = '未选择文件';
+                workbook = null;
+                jsonData = null;
+                sheetDataMap.clear();
+                uploadedFileName = '';
+                fieldMapping = null;
+                mappingStats = null;
+                templateFileName = '';
+                templateFile.value = '';
+                templateFileNameEl.textContent = '未选择模版';
+                clearTemplateBtn.style.display = 'none';
+                mappingInfo.innerHTML = '<span class="mapping-badge empty">未加载映射模版 — 将使用原始JSON字段名</span>';
+                mappingDetail.innerHTML = '';
+                mappingDetail.classList.remove('show');
+                downloadBtn.disabled = true;
+                hideMessage(errorMsg);
+                hideMessage(successMsg);
+                hideMessage(infoMsg);
+
+                sheetList.innerHTML = `
+                    <div class="sheet-item">
+                        <span class="sheet-name">暂无数据</span>
+                        <span class="sheet-rows">请先处理JSON数据</span>
+                    </div>
+                `;
+            });
+            
+            // 处理JSON数据
+            processBtn.addEventListener('click', async function() {
+                try {
+                    const jsonText = jsonInput.value.trim();
+                    if (!jsonText) {
+                        showError('请输入JSON数据');
+                        return;
+                    }
+
+                    showInfo('正在处理数据，请稍候...');
+                    processBtn.disabled = true;
+                    downloadBtn.disabled = true;
+                    await sleep(50);
+
+                    jsonData = JSON.parse(jsonText);
+                    workbook = await processJsonDataAsync(jsonData);
+
+                    displaySheetInfo(workbook);
+                    downloadBtn.disabled = false;
+                    showSuccess('数据处理成功！可以下载Excel文件了。');
+                    hideMessage(errorMsg);
+                } catch (err) {
+                    showError('处理JSON数据时出错: ' + err.message);
+                } finally {
+                    processBtn.disabled = false;
+                }
+            });
+
+            function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+            
+            // 下载Excel文件
+            downloadBtn.addEventListener('click', async function() {
+                if (!jsonData) {
+                    showError('请先处理JSON数据');
+                    return;
+                }
+
+                // 优先尝试服务端导出
+                try {
+                    showInfo('正在生成Excel...');
+                    const response = await fetch('{{ url_for("export_tax_excel_api") }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(jsonData)
+                    });
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = generateFileName();
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        showSuccess('Excel文件下载成功！');
+                        return;
+                    }
+                } catch (e) {
+                    // 服务端不可用，回退到客户端生成
+                }
+
+                // 客户端生成 Excel
+                try {
+                    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+                    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = generateFileName();
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    showSuccess('Excel文件下载成功！');
+                } catch (err) {
+                    showError('生成Excel文件时出错: ' + err.message);
+                }
+            });
+            
+            // 通用JSON数据处理 — 支持任意JSON结构
+            async function processJsonDataAsync(data) {
+                const wb = XLSX.utils.book_new();
+                sheetDataMap.clear();
+                const usedSheetNames = new Set();
+
+                if (Array.isArray(data)) {
+                    if (data.length === 0) {
+                        throw new Error('JSON数组为空，没有数据可处理');
+                    }
+                    if (!isObjectOrArray(data[0])) {
+                        // 基本类型数组 → 单列表
+                        const rows = data.map((v, i) => ({ '序号': i + 1, '值': v }));
+                        const name = uniqueSheetName('数据', usedSheetNames);
+                        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), name);
+                        sheetDataMap.set(name, rows);
+                    } else if (isObject(data[0])) {
+                        // 对象数组 → 主表 + 嵌套子表
+                        await processArrayOfObjectsAsync(wb, data, '数据', usedSheetNames);
+                    }
+                } else if (isObject(data)) {
+                    // 根对象 → 递归扫描
+                    await processObjectToSheetsAsync(wb, data, usedSheetNames);
+                } else {
+                    throw new Error('不支持的JSON数据类型：仅支持对象或数组');
+                }
+
+                if (wb.SheetNames.length === 0) {
+                    const ws = XLSX.utils.aoa_to_sheet([['无有效数据']]);
+                    XLSX.utils.book_append_sheet(wb, ws, '数据');
+                    sheetDataMap.set('数据', []);
+                }
+
+                return wb;
+            }
+
+            function isObject(v) { return typeof v === 'object' && v !== null && !Array.isArray(v); }
+            function isObjectOrArray(v) { return typeof v === 'object' && v !== null; }
+
+            // 展开嵌套对象为扁平键值对（点号分隔），跳过数组字段，自动应用模版映射
+            function flattenObject(obj, prefix) {
+                const result = {};
+                for (const [key, value] of Object.entries(obj)) {
+                    const newKey = prefix ? prefix + '.' + key : key;
+                    if (isObject(value)) {
+                        Object.assign(result, flattenObject(value, newKey));
+                    } else if (!Array.isArray(value)) {
+                        result[newKey] = value;
+                    }
+                }
+                return result;
+            }
+
+            // 生成唯一工作表名（XLSX限制≤31字符，无重名）
+            function uniqueSheetName(base, used) {
+                let name = base.length > 31 ? base.slice(0, 31) : base;
+                if (!used.has(name)) { used.add(name); return name; }
+                let n = 2;
+                while (true) {
+                    let s = (base.slice(0, 27) + '_' + n).slice(0, 31);
+                    if (!used.has(s)) { used.add(s); return s; }
+                    n++;
+                }
+            }
+
+            // 处理对象数组：创建主表 + 递归扫描所有嵌套数组子表（异步分块）
+            async function processArrayOfObjectsAsync(wb, arr, sheetName, usedNames) {
+                const CHUNK_SIZE = 200;
+
+                // 递归扫描所有层级中的数组路径（例如 FPXX.FPSPMX）
+                const arrayPaths = new Map();
+
+                function scanArrays(obj, prefix) {
+                    for (const [key, value] of Object.entries(obj)) {
+                        const path = prefix ? prefix + '.' + key : key;
+                        if (Array.isArray(value)) {
+                            arrayPaths.set(path, key);
+                        } else if (isObject(value)) {
+                            scanArrays(value, path);
+                        }
+                    }
+                }
+                if (arr.length > 0 && isObject(arr[0])) {
+                    scanArrays(arr[0], '');
+                }
+
+                // 每个数组路径对应一个收集器
+                const collectors = {};
+                arrayPaths.forEach((key, path) => { collectors[path] = []; });
+
+                // 主表：分块处理，每块后 yield 让 UI 保持响应
+                const total = arr.length;
+                const allFlattened = [];
+
+                for (let start = 0; start < total; start += CHUNK_SIZE) {
+                    const end = Math.min(start + CHUNK_SIZE, total);
+
+                    for (let i = start; i < end; i++) {
+                        const item = arr[i];
+                        const flat = {};
+
+                        function walk(obj, prefix) {
+                            for (const [key, value] of Object.entries(obj)) {
+                                const path = prefix ? prefix + '.' + key : key;
+                                if (Array.isArray(value)) {
+                                    flat[key + ' (数量)'] = value.length;
+                                    if (collectors[path]) {
+                                        value.forEach(sub => {
+                                            if (isObject(sub)) {
+                                                const enriched = flattenObject(sub, '');
+                                                collectors[path].push(enriched);
+                                            } else {
+                                                collectors[path].push({ [key]: sub });
+                                            }
+                                        });
+                                    }
+                                } else if (isObject(value)) {
+                                    walk(value, path);
+                                } else {
+                                    flat[path] = value;
+                                }
+                            }
+                        }
+                        walk(item, '');
+                        allFlattened.push(flat);
+                    }
+
+                    if (start + CHUNK_SIZE < total) {
+                        showInfo('正在处理数据... ' + Math.min(end, total) + '/' + total + ' 行');
+                        await sleep(0);
+                    }
+                }
+
+                appendSheetWithHeaders(wb, allFlattened, sheetName, usedNames);
+
+                // 为每个数组路径创建子表
+                arrayPaths.forEach((key, path) => {
+                    const items = collectors[path];
+                    appendSheetWithHeaders(wb, items.length > 0 ? items : [{ '无数据': '' }], key, usedNames);
+                });
+            }
+
+            // 递归处理对象：扫描所有层级的数组和标量字段
+            async function processObjectToSheetsAsync(wb, obj, usedNames, parentKey) {
+                const entries = Object.entries(obj);
+                const arrayEntries = entries.filter(([, v]) => Array.isArray(v));
+                const objectEntries = entries.filter(([, v]) => isObject(v));
+                const scalarEntries = entries.filter(([, v]) => !Array.isArray(v) && !isObject(v));
+
+                // 直接子级数组 → 每个数组一个工作表
+                for (const [key, arr] of arrayEntries) {
+                    if (arr.length > 0 && isObject(arr[0])) {
+                        await processArrayOfObjectsAsync(wb, arr, key, usedNames);
+                    } else if (arr.length > 0) {
+                        const rows = arr.map((v, i) => ({ '序号': i + 1, '值': v }));
+                        const n = uniqueSheetName(key, usedNames);
+                        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), n);
+                        sheetDataMap.set(n, rows);
+                    } else {
+                        const n = uniqueSheetName(key, usedNames);
+                        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['无数据']]), n);
+                        sheetDataMap.set(n, []);
+                    }
+                }
+
+                // 嵌套对象：如果是纯标量对象则作为单行横向表头输出，否则递归
+                for (const [key, child] of objectEntries) {
+                    const childEntries = Object.entries(child);
+                    const hasNested = childEntries.some(([, v]) => isObject(v) || Array.isArray(v));
+                    if (!hasNested && childEntries.length > 0) {
+                        const flat = flattenObject(child, '');
+                        appendSheetWithHeaders(wb, [flat], key, usedNames);
+                    } else {
+                        await processObjectToSheetsAsync(wb, child, usedNames, key);
+                    }
+                }
+
+                // 当前层的标量字段 → 横向表头格式（字段名作为列头）
+                if (scalarEntries.length > 0) {
+                    const row = {};
+                    for (const [k, v] of scalarEntries) {
+                        row[k] = v;
+                    }
+                    const n = uniqueSheetName(parentKey || '根节点', usedNames);
+                    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([row]), n);
+                    sheetDataMap.set(n, [row]);
+                }
+            }
+
+            // 生成文件名
+            function generateFileName() {
+                if (uploadedFileName) return uploadedFileName.replace(/\.json$/i, '.xlsx');
+                return 'json_export_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+            }
+            
+            // 显示工作表信息
+            function displaySheetInfo(wb) {
+                if (wb.SheetNames.length === 0) {
+                    sheetList.innerHTML = `
+                        <div class="sheet-item">
+                            <span class="sheet-name">无有效数据</span>
+                            <span class="sheet-rows">无法创建工作表</span>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                wb.SheetNames.forEach(name => {
+                    const ws = wb.Sheets[name];
+                    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+                    const rowCount = range.e.r - range.s.r;
+                    html += `
+                        <div class="sheet-item">
+                            <span class="sheet-name">${name}</span>
+                            <span class="sheet-rows">${rowCount} 行数据</span>
+                        </div>
+                    `;
+                });
+                sheetList.innerHTML = html;
+            }
+            
+            function showError(message) {
+                errorMsg.textContent = message;
+                errorMsg.style.display = 'block';
+                hideMessage(successMsg);
+                hideMessage(infoMsg);
+            }
+            
+            function showSuccess(message) {
+                successMsg.textContent = message;
+                successMsg.style.display = 'block';
+                hideMessage(errorMsg);
+                hideMessage(infoMsg);
+            }
+            
+            function showInfo(message) {
+                infoMsg.textContent = message;
+                infoMsg.style.display = 'block';
+            }
+            
+            function hideMessage(element) {
+                element.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

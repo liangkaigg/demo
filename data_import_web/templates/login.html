@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理员登录 - 数据管理平台</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .login-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--glass-shadow-hover);
+      padding: 48px 40px 40px;
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+      z-index: 1;
+      animation: panelIn 0.45s ease forwards;
+    }
+    .login-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .login-logo svg {
+      width: 40px;
+      height: 40px;
+      color: var(--primary);
+    }
+    .login-title {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .login-subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .login-form .form-field {
+      gap: 6px;
+    }
+    .login-form .form-field label {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .login-form input[type="text"],
+    .login-form input[type="password"] {
+      padding: 12px 16px;
+      font-size: 15px;
+    }
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-top: 4px;
+    }
+    .login-error {
+      background: var(--danger-bg);
+      color: #991b1b;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 14px;
+      text-align: center;
+      animation: fadeSlideIn 0.3s ease;
+    }
+    .login-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 32px 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-orb bg-orb--1"></div>
+  <div class="bg-orb bg-orb--2"></div>
+
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">
+        <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 3L3 9l11 6 11-6-11-6z"/>
+          <path d="M3 15l11 6 11-6"/>
+          <path d="M3 21l11 6 11-6"/>
+        </svg>
+      </div>
+      <div class="login-title">数据管理平台</div>
+      <div class="login-subtitle">管理员请登录</div>
+
+      <form class="login-form" method="POST" action="{{ url_for('login') }}">
+        {% if error %}
+        <div class="login-error">{{ error }}</div>
+        {% endif %}
+        <div class="form-field">
+          <label for="username">用户名</label>
+          <input type="text" id="username" name="username" placeholder="请输入管理员用户名" required autofocus>
+        </div>
+        <div class="form-field">
+          <label for="password">密码</label>
+          <input type="password" id="password" name="password" placeholder="请输入管理员密码" required>
+        </div>
+        <button type="submit" class="btn btn-primary login-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          登 录
+        </button>
+      </form>
+
+      <div class="login-footer">
+        数据管理平台 v1.0
+      </div>
+    </div>
+  </div>
+</body>
+</html>
